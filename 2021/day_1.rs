@@ -129,13 +129,7 @@ fn main() {
 
     let part_2 = DATA
         .windows(4)
-        .map(|x| {
-            if (x[3] + x[2] + x[1]) > (x[2] + x[1] + x[0]) {
-                1
-            } else {
-                0
-            }
-        })
+        .map(|x| if x[3] > x[0] { 1 } else { 0 })
         .sum::<usize>();
 
     println!("part 2: {:?}", part_2);

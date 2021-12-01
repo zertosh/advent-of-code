@@ -2019,9 +2019,7 @@ const data = [
   let inc = 0;
 
   for (let i = 3; i < data.length; i++) {
-    let a = data[i] + data[i - 1] + data[i - 2];
-    let b = data[i - 1] + data[i - 2] + data[i - 3];
-    if (a > b) {
+    if (data[i] > data[i - 3]) {
       inc++;
     }
   }
