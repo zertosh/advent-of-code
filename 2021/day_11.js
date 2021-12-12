@@ -8,56 +8,52 @@ const INPUT = require('fs')
   .split('\n')
   .map(x => x.split('').map(x => parseInt(x)));
 
-function adjacent(grid, x, y) {
-  return [
-    [x, y + 1],
-    [x, y - 1],
-    [x + 1, y],
-    [x - 1, y],
-    //
-    [x + 1, y + 1],
-    [x + 1, y - 1],
-    [x - 1, y + 1],
-    [x - 1, y - 1],
-  ].filter(
-    ([xx, yy]) => yy >= 0 && yy < grid.length && xx >= 0 && xx < grid[y].length,
-  );
+function* adjacent(grid, x, y) {
+  for (const [xx, yy] of [
+    /* N  */ [x, y + 1],
+    /* NE */ [x + 1, y + 1],
+    /* E  */ [x + 1, y],
+    /* SE */ [x + 1, y - 1],
+    /* S  */ [x, y - 1],
+    /* SW */ [x - 1, y - 1],
+    /* W  */ [x - 1, y],
+    /* NW */ [x - 1, y + 1],
+  ]) {
+    if (yy >= 0 && yy < grid.length && xx >= 0 && xx < grid[y].length) {
+      yield [grid[yy][xx], xx, yy];
+    }
+  }
+}
+
+function* walk(grid) {
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      yield [grid[y][x], x, y];
+    }
+  }
 }
 
 function do_step(grid) {
-  let flashes = 0;
-  const flashed = {};
-
   // First increase self.
-  for (let y = 0; y < grid.length; y++) {
-    for (let x = 0; x < grid[y].length; x++) {
-      grid[y][x] += 1;
-    }
+  for (const [, x, y] of walk(grid)) {
+    grid[y][x] += 1;
   }
 
   // Then increase adjacent.
-  while (grid.some(row => row.some(t => t > 9))) {
-    for (let y = 0; y < grid.length; y++) {
-      for (let x = 0; x < grid[y].length; x++) {
-        if (x in (flashed[y] || (flashed[y] = {}))) {
-          continue;
-        }
+  while (grid.some(row => row.some(el => el > 9))) {
+    for (const [el, x, y] of walk(grid)) {
+      if (el <= 9) {
+        continue;
+      }
 
-        if (grid[y][x] > 9) {
-          grid[y][x] = 0;
-          flashed[y][x] = null;
-          flashes++;
-          for (const [xx, yy] of adjacent(grid, x, y)) {
-            if (!(xx in (flashed[yy] || (flashed[yy] = {})))) {
-              grid[yy][xx] += 1;
-            }
-          }
+      grid[y][x] = 0;
+      for (const [elel, xx, yy] of adjacent(grid, x, y)) {
+        if (elel !== 0) {
+          grid[yy][xx] += 1;
         }
       }
     }
   }
-
-  return flashes;
 }
 
 (function part_1() {
@@ -65,7 +61,12 @@ function do_step(grid) {
 
   let flashes = 0;
   for (let step = 0; step < 100; step++) {
-    flashes += do_step(grid);
+    do_step(grid);
+    for (const [el] of walk(grid)) {
+      if (el === 0) {
+        flashes++;
+      }
+    }
   }
 
   assert.equal(flashes, 1617);
@@ -76,7 +77,7 @@ function do_step(grid) {
 
   let all_flashed_step = 0;
   for (let step = 0; step < 20000; step++) {
-    if (grid.every(row => row.every(t => t === 0))) {
+    if (grid.every(row => row.every(el => el === 0))) {
       all_flashed_step = step;
       break;
     }
